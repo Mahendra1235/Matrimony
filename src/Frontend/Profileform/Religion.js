@@ -1,4 +1,3 @@
-import react from "react";
 
 const Religion = ({value, onChange}) => {
     return (

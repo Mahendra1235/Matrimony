@@ -43,7 +43,7 @@ const ResetPassword = () => {
   
     try {
       const username = 'Mahe'; // Replace this with the actual username from logged-in user's context
-      const response = await axios.post('http://localhost:8081/reset-password', {
+      await axios.post('http://localhost:8081/reset-password', {
         username,
         newPassword,
       });
