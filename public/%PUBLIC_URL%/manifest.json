@@ -1,0 +1,22 @@
+{
+    "short_name": "Elite Matrimony",
+    "name": "Elite Matrimony Platform",
+    "description": "A platform for finding the right match",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "icons": [
+      {
+        "src": "Logo2.jpg",
+        "sizes": "192x192",
+        "type": "image/jpg"
+      },
+      {
+        "src": "Logo2.jpg",
+        "sizes": "512x512",
+        "type": "image/jpg"
+      }
+    ]
+  }
+  
