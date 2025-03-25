@@ -14,6 +14,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.9",
+    "balanced-match": "^3.0.1",
     "install": "^0.13.0",
     "json2csv": "^6.0.0-alpha.2",
     "jspdf": "^2.5.2",
