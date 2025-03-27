@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-// import Select from 'react-select';
 import State from '../Profileform/State';
 import MaritalStatus from '../Profileform/MaritalStatus';
 import Religion from '../Profileform/Religion';
@@ -80,6 +79,25 @@ const ProfileForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'phone') {
+      const numericValue = value.replace(/\D/g, '');
+      const limitedValue = numericValue.slice(0, 10);
+      
+      setFormData({
+        ...formData,
+        [name]: limitedValue
+      });
+
+      if (!validatePhoneNumber(limitedValue)) {
+        setPhoneError('Please enter a valid 10-digit phone number starting with 7, 8, or 9.');
+      } else {
+        setPhoneError('');
+      }
+      
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]: value
@@ -90,14 +108,6 @@ const ProfileForm = () => {
         setNameError('Name must start with a capital letter, and cannot contain ,|.| spaces, hyphens, or apostrophes.');
       } else {
         setNameError('');
-      }
-    }
-
-    if (name === 'phone') {
-      if (!validatePhoneNumber(value)) {
-        setPhoneError('Please enter a valid phone number.');
-      } else {
-        setPhoneError('');
       }
     }
 
@@ -118,7 +128,7 @@ const ProfileForm = () => {
     }
 
     if (name === 'age') {
-      if (value < 18 || value >40) {
+      if (value < 18 || value > 40) {
         setAgeError('Only age between [18-40].');
       } else {
         setAgeError('');
@@ -171,11 +181,12 @@ const ProfileForm = () => {
           <Email value={formData.email} onChange={handleChange}/>
             {emailError && <p className="error">{emailError}</p>}
 
-          <Password value= {formData.password} onChange={handleChange}/>
+          <Password value={formData.password} onChange={handleChange}/>
             {passwordError && <p className="error">{passwordError}</p>}
 
           <Phone value={formData.phone} onChange={handleChange}/>
             {phoneError && <p className="error">{phoneError}</p>}
+          
           
           <Age value={formData.age} onChange={handleChange}/>
           {ageError && <p className="error">{ageError}</p>}

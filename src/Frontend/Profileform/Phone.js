@@ -9,6 +9,9 @@ const Phone = ({ phone, onChange, phoneError }) => {
         name="phone"
         value={phone}
         onChange={onChange}
+        maxLength={10}
+        pattern="[0-9]*"
+        placeholder="Enter 10-digit phone number"
         required
       />
     </div>
