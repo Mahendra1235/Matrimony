@@ -261,6 +261,161 @@ app.post('/reset-password', (req, res) => {
 
 
 
+// Sample user data (you would get this from your database after registration)
+// let users = [
+//   { email: 'maheshrock.4550@gmail.com', name: 'Mahe' },
+// ];
+
+// // Route to send confirmation email
+// app.post('/send-confirmation-email', (req, res) => {
+//   const { email } = req.body;
+  
+//   // Generate a confirmation token
+//   const token = crypto.randomBytes(16).toString('hex');
+  
+//   // Compose the confirmation email
+//   const mailOptions = {
+//     from: 'maheshrock.4550@gmail.com', 
+//     to: email, 
+//     subject: 'Email Confirmation',
+//     text: `Hello, please confirm your email address by clicking the following link: 
+//     http://localhost:8081/confirm-email?token=${token}`,
+//   };
+
+//   // Send the email
+//   transporter.sendMail(mailOptions, (error, info) => {
+//     if (error) {
+//       console.log('error sending email:' , error);
+//     }
+//     console.log('Email sent: ' + info.response);
+//   });
+// });
+
+// // Route to handle email confirmation
+// app.get('/confirm-email', (req, res) => {
+//   const { token } = req.query;
+//   res.send('Email confirmed!');
+// });
+
+
+// Route to send confirmation email
+app.post('/send-confirmation-email', (req, res) => {
+  const { email } = req.body;
+
+  // Query the database to check if the email exists
+  db.execute('SELECT * FROM users WHERE Email = ?', [email], (err, results) => {
+    if (err) {
+      console.error('Error fetching user from database:', err);
+      return res.status(500).send('Error fetching user data');
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send('User not found');
+    }
+
+    // Check if the email has already been confirmed
+    if (results[0].isEmailConfirmed) {
+      return res.status(400).send('Email already confirmed');
+    }
+
+    // Generate a confirmation token
+    const token = crypto.randomBytes(16).toString('hex');
+
+    // Store the token in the database for later confirmation check
+    db.execute('UPDATE users SET confirmationToken = ? WHERE Email = ?', [token, email], (err, result) => {
+      if (err) {
+        console.error('Error storing confirmation token:', err);
+        return res.status(500).send('Error storing token');
+      }
+    });
+
+    // Compose the confirmation email
+    const mailOptions = {
+      from: 'test@gmail.com',
+      to: email,
+      subject: 'Email Confirmation',
+      text: `Hello, please confirm your email address by clicking the following link:
+      http://localhost:8081/confirm-email?token=${token}`,
+    };
+
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('Error sending email:', error);
+        return res.status(500).send('Error sending confirmation email');
+      }
+
+      console.log('Email sent: ' + info.response);
+      res.send('Confirmation email sent!');
+    });
+  });
+});
+
+// Route to handle email confirmation
+app.get('/confirm-email', (req, res) => {
+  const { token } = req.query;
+
+  // Query to check if the token matches a user in the database
+  db.execute('SELECT * FROM users WHERE confirmationToken = ?', [token], (err, results) => {
+    if (err) {
+      console.error('Error fetching user by token:', err);
+      return res.status(500).send('Error confirming email');
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send('Invalid token');
+    }
+
+    // Update the user to mark email as confirmed and remove the token
+    db.execute('UPDATE users SET isEmailConfirmed = 1, confirmationToken = NULL WHERE confirmationToken = ?', [token], (err, result) => {
+      if (err) {
+        console.error('Error updating email confirmation status:', err);
+        return res.status(500).send('Error confirming email');
+      }
+
+      res.send('Email confirmed!');
+    });
+  });
+});
+
+// Route to store user data in the database (after email confirmation)
+app.post('/register', (req, res) => {
+  const { formData } = req.body;
+
+  if (!formData.email || !formData.password) {
+    return res.status(400).send('Email and password are required.');
+  }
+
+  // Check if the email is confirmed
+  db.execute('SELECT * FROM users WHERE Email = ?', [formData.email], (err, results) => {
+    if (err) {
+      console.error('Error fetching user from database:', err);
+      return res.status(500).send('Error fetching user data');
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send('User not found');
+    }
+
+    // Check if email is confirmed
+    if (!results[0].isEmailConfirmed) {
+      return res.status(400).send('Email is not confirmed. Please confirm your email before proceeding.');
+    }
+
+    // Store the user data in the database
+    db.execute('INSERT INTO users SET ?', formData, (err, result) => {
+      if (err) {
+        console.error('Error storing user data:', err);
+        return res.status(500).send('Error storing user data');
+      }
+
+      res.send('User registered successfully!');
+    });
+  });
+});
+
+
+
 app.listen(8081, () => {
     console.log("Server listening on port 8081");
 });

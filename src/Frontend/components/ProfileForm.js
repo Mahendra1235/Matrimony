@@ -68,9 +68,12 @@ const ProfileForm = () => {
   };
 
   const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-  };
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com)$/;
+  return emailRegex.test(email);
+};
+
+
+
 
   const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@./]{8,}$/;
@@ -146,18 +149,32 @@ const ProfileForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+  
     if (nameError || phoneError || emailError || passwordError || ageError) {
       return;
     }
-
+  
     axios.post('http://localhost:8081/register', { formData })
       .then(res => {
         console.log("Registered successfully!");
+        
+        // After successful registration, trigger email confirmation
+        axios.post('http://localhost:8081/send-confirmation-email', {
+          email: formData.email, // Send the user's email
+        })
+        .then(response => {
+          console.log("Confirmation email sent!");
+          // You can also show a message to the user to check their inbox
+          alert("Please check your inbox for a confirmation email.");
+        })
+        .catch(err => {
+          console.error("Error sending confirmation email:", err);
+        });
+  
         const newUserId = userId + 1;
         setUserId(newUserId);
         localStorage.setItem('userId', newUserId);
-
+  
         setIsSubmitted(true);
         window.location.reload();
       })
@@ -166,7 +183,8 @@ const ProfileForm = () => {
         setIsSubmitted(false);
       });
   };
-
+  
+  
   return (
     <div className="form-container">
       <form onSubmit={handleSubmit} className="form-flex">
