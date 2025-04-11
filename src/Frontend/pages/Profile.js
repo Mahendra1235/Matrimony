@@ -1,43 +1,52 @@
 import React, { useState } from 'react';
-import '../App.css';
+import axios from 'axios';
 import VerifyProfile from './VerifyProfile';
 
 const Profile = () => {
-  const [profileData, setProfileData] = useState({
-    name: 'Mahendra',
-    age: 26,
-    gender: 'Male',
-    caste: 'OC',
-    religion: 'Hindu',
-    Occupation: 'IT profession',
-    interests: 'Music, Traveling, Photography',
-    email: 'Mahe@example.com',
-    location: 'Chennai,TN',
-    aboutMe: 'I am a passionate traveler who loves exploring new places and cultures. Looking for a life partner who shares similar interests.'
-  });
-
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [profileData, setProfileData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState(profileData);
+  const [editedData, setEditedData] = useState({});
   const [newProfilePicture, setNewProfilePicture] = useState(null);
-
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditedData({
-      ...editedData,
-      [name]: value
-    });
+    if (name === 'username') {
+      setUsername(value);
+    } else if (name === 'password') {
+      setPassword(value);
+    } else {
+      setEditedData({ ...editedData, [name]: value });
+    }
   };
 
   const handleEdit = () => {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setProfileData(editedData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const response = await axios.put('http://localhost:8081/api/profile', {
+        ...editedData, 
+        username,
+        password,
+      });
+  
+      if (response.data && response.data.message === 'Profile updated successfully') {
+        setProfileData(editedData);
+        setIsEditing(false);
+        setErrorMessage('');
+      } else {
+        setErrorMessage('Error saving profile data');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setErrorMessage('Error saving profile data');
+    }
   };
-
+  
   const handleCancel = () => {
     setEditedData(profileData);
     setIsEditing(false);
@@ -58,12 +67,78 @@ const Profile = () => {
     document.getElementById('profilePictureInput').click();
   };
 
+  const fetchProfileData = async () => {
+    if (username && password) {
+      try {
+        const response = await axios.post('http://localhost:8081/api/profile', {
+          username,
+          password
+        });
+
+        if (response.data) {
+          setProfileData(response.data);
+          setEditedData(response.data);
+          setErrorMessage('');
+        }
+      } catch (error) {
+        setErrorMessage('User not found or incorrect password');
+        console.error('Error fetching profile data:', error);
+      }
+    } else {
+      setErrorMessage('Please enter both username and password');
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetchProfileData();
+  };
+
+  if (!profileData) {
+    return (
+      <div>
+        <h2>Login to view profile</h2>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={username}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={password}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <button type="submit">Submit</button>
+          </div>
+        </form>
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className="profile-container">
       <div className="profile-details">
         <div className="profile-image">
-        <img src={newProfilePicture || profileData.profilePicture} alt="Profile" />
-          <button type="button" className="edit-profile-picture-btn" onClick={handleProfilePictureEdit}>
+          <img
+            src={newProfilePicture || profileData.profile_picture}
+            alt="Profile"
+          />
+          <button
+            type="button"
+            className="edit-profile-picture-btn"
+            onClick={handleProfilePictureEdit}
+          >
             Edit
           </button>
           <input
@@ -82,8 +157,8 @@ const Profile = () => {
                 <label>Name:</label>
                 <input
                   type="text"
-                  name="name"
-                  value={editedData.name}
+                  name="username"
+                  value={editedData.username}
                   onChange={handleChange}
                 />
               </div>
@@ -125,15 +200,7 @@ const Profile = () => {
                   onChange={handleChange}
                 />
                 </div>
-                <div className="form-group">
-                <label>Occupation:</label>
-                <input
-                  type="text"
-                  name="Occupation"
-                  value={editedData.Occupation}
-                  onChange={handleChange}
-                />
-                </div>
+                
               <div className="form-group">
                 <label>Interests:</label>
                 <input
@@ -153,11 +220,11 @@ const Profile = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Location:</label>
+                <label>State:</label>
                 <input
                   type="text"
-                  name="location"
-                  value={editedData.location}
+                  name="State"
+                  value={editedData.state}
                   onChange={handleChange}
                 />
               </div>
@@ -169,30 +236,36 @@ const Profile = () => {
                   onChange={handleChange}
                 />
               </div>
+
               <div className="form-actions">
-                <button type="button" className="save-btn" onClick={handleSave}>Save</button>
-                <button type="button" className="cancel-btn" onClick={handleCancel}>Cancel</button>
+                <button type="button" className="save-btn" onClick={handleSave}>
+                  Save
+                </button>
+                <button type="button" className="cancel-btn" onClick={handleCancel}>
+                  Cancel
+                </button>
               </div>
             </form>
           ) : (
             <>
-              <h3>{profileData.name}</h3>
+              <h3>{profileData.username}</h3>
               <p>Age: {profileData.age}</p>
               <p>Gender: {profileData.gender}</p>
-              <p>Caste: {profileData.caste} </p>
-              <p>Religion: {profileData.religion} </p>
-              <p>Occupation: {profileData.Occupation} </p>
+              <p>Caste: {profileData.caste}</p>
+              <p>Religion: {profileData.religion}</p>
               <p>Email: {profileData.email}</p>
-              <p>Location: {profileData.location}</p>
+              <p>State: {profileData.state}</p>
               <p>Interests: {profileData.interests}</p>
-              <p>About Me: {profileData.aboutMe}</p>
-              <button className="edit-btn" onClick={handleEdit}>Edit Profile</button>
+              <p>About Me: {profileData.about_me}</p>
+              <button className="edit-btn" onClick={handleEdit}>
+                Edit Profile
+              </button>
             </>
           )}
         </div>
       </div>
-      <hr/>
-      <VerifyProfile/>
+      <hr />
+      <VerifyProfile />
     </div>
   );
 };

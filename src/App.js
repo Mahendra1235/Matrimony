@@ -14,6 +14,7 @@ import FAQTechnicalIssues from './Frontend/pages/FAQTechnicalIssues';
 import Admin from './Frontend/pages/AdminPage';
 import ForgotPassword from './Frontend/pages/ForgotPassword';
 import ResetPassword from './Frontend/pages/ResetPassword';
+import Subscriptions from './Frontend/pages/Subscriptions';
 
 function App() {
   const location = useLocation();
@@ -36,6 +37,7 @@ function App() {
         <Route path="/faq/contact-match" element={<FAQContactMatch />} />
         <Route path="/faq/technical-issues" element={<FAQTechnicalIssues />} />
         <Route path="reset-password/:token" element={<ResetPassword />} />
+        <Route path="/subscriptions" element={<Subscriptions />} />
 
 
       </Routes>

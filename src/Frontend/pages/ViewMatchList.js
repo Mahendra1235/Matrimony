@@ -1,57 +1,100 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom'; 
-import '../App.css'
+import { useLocation } from 'react-router-dom';
+import { faEnvelope, faComment, faPhoneAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '../App.css';
+import Subscriptions from './Subscriptions';
 
 const Profile = () => {
-  const { id } = useParams();
-  const matches = [
-    { name: 'Harish', age: 30, interests: 'Music, Travel', Occupation: 'Civil Engineer', profilepicture: 'https://randomuser.me/api/portraits/men/58.jpg', height: '5.5ft', },
-    { name: 'Priyanka', age: 28, interests: 'Reading, Yoga', Occupation: 'Architect', profilepicture: 'https://randomuser.me/api/portraits/women/84.jpg', height: '5.2ft', },
-    { name: 'Naveen', age: 28, interests: 'Gym', Occupation: 'Software Engineer.', profilepicture: 'https://randomuser.me/api/portraits/men/65.jpg', height: '5.7ft', },
-    { name: 'Tariq', age: 30, interests: 'Photography', Occupation: 'Photographer', profilepicture: 'https://randomuser.me/api/portraits/men/50.jpg', height: '6.0ft', },
-    { name: 'Manasa', age: 35, interests: 'Cooking', Occupation: 'Freelancer', profilepicture: 'https://randomuser.me/api/portraits/women/15.jpg', height: '5.5ft', },
-    { name: 'Karthik', age: 35, interests: 'Movies', Occupation: 'Movie Director', profilepicture: 'https://randomuser.me/api/portraits/men/69.jpg', height: '6.5ft', },
-  ];
+  const location = useLocation();
+  const selectedMatch = location.state.match;
+  const [showPhone, setShowPhone] = useState(false);
+  const [showChat, setShowChat] = useState(false); 
+  const [message, setMessage] = useState('');  
+  const [chatMessages, setChatMessages] = useState([]);
 
-  const selectedMatch = matches[id];
-
-  const [isInterested, setIsInterested] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-
-  const handleShowInterest = () => {
-    setIsInterested(true);
-    setShowPopup(true);   
+  const handleShowPhoneNumber = () => {
+    setShowPhone(!showPhone);
   };
 
-  const handleDontShowInterest = () => {
-    setIsInterested(false);
+  const handleChat = () => {
+    setShowChat(!showChat);
   };
+
+  const handleEmail = () => {
+    window.location.href = `mailto:${selectedMatch.email}?subject=Interested in connecting!&body=Hi ${selectedMatch.name}, I would love to connect!`;
+  };
+
+  const handleSendMessage = () => {
+    if (message.trim()) { 
+      setChatMessages([...chatMessages, { text: message, sender: 'You' }]); 
+      setMessage(''); 
+    }
+  };
+
 
   return (
     <div className="profile">
-    <img src={selectedMatch.profilepicture} alt="Profile" />
       <h2>{selectedMatch.name}'s Profile</h2>
+      <img src={selectedMatch.profilepicture} alt="Profile" />
       <p>Age: {selectedMatch.age}</p>
       <p>Height: {selectedMatch.height}</p>
+      <p>Weight: {selectedMatch.weight}</p>
+      <p>Caste: {selectedMatch.caste}</p>
+      <p>State: {selectedMatch.state}</p>
       <p>Interests: {selectedMatch.interests}</p>
-      <p>Occupation: {selectedMatch.Occupation}</p>
-      <h3>Intrested? Connect now</h3>
+      <h3>Interested? Connect now</h3>
 
-      {showPopup && <div className="popup-message">Your interest has been sent!</div>}
+      <div className="contact-options">
+        <button onClick={handleChat} className="contact-btn">
+          <FontAwesomeIcon icon={faComment} /> Chat
+        </button>
 
-      {!isInterested ? (
-        <>
-          <button onClick={handleShowInterest}> <strong>Show Interest</strong></button>
-        </>
-      ) : (
-        <>
-          <button onClick={handleDontShowInterest}>Don't Show Interest</button>
-        </>
+        <button onClick={handleEmail} className="contact-btn">
+          <FontAwesomeIcon icon={faEnvelope} /> Email
+        </button>
+
+        <button onClick={handleShowPhoneNumber} className="contact-btn">
+          <FontAwesomeIcon icon={faPhoneAlt} /> {showPhone ? 'Hide Phone Number' : 'Show Phone Number'}
+        </button>
+
+        {showPhone && selectedMatch?.phone_number ? (
+         <p>Phone Number: {selectedMatch.phone_number}</p>
+           ) : (
+           showPhone && <p>Phone number is unavailable</p>
+           )}
+
+      </div>
+
+      {/* Chatbox Modal */}
+      {showChat && (
+        <div className="chatbox">
+          <div className="chatbox-header">
+            <h4>Chat with {selectedMatch.name}</h4>
+            <button onClick={handleChat} className="close-chat-btn">X</button>
+          </div>
+          
+          <div className="chatbox-messages">
+            {chatMessages.length === 0 ? (
+              <p>Start your conversation here...</p>
+            ) : (
+              chatMessages.map((msg, index) => (
+                <div key={index} className="chat-message">
+                  <strong>{msg.sender}:</strong> {msg.text}
+                </div>
+              ))
+            )}
+          </div>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type your message"
+          />
+          <button onClick={handleSendMessage} className="send-btn">Send</button>
+        </div>
+
       )}
-
-      {/* <div className="bottom-buttons">
-        <button onClick={handleDontShowInterest}>x Don't Show</button>
-      </div> */}
+  <Subscriptions />
     </div>
   );
 };

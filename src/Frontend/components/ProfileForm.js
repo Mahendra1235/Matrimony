@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import State from '../Profileform/State';
 import MaritalStatus from '../Profileform/MaritalStatus';
@@ -41,6 +41,7 @@ const ProfileForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [nameError, setNameError] = useState('');
   const [ageError, setAgeError] = useState('');
@@ -57,6 +58,18 @@ const ProfileForm = () => {
     { value: "Gaming", label: "Gaming" },
   ];
 
+  const religionCasteOptions = {
+    hindu: ["OC", "BC", "SC", "Brahmin", "Others"],
+    christian: ["SC", "ST", "OBC", "Forward caste", "Others"],
+    muslim: ["Muslim-Ansari", "Muslim-Arain", "Muslim-Awan", "Muslim-Bohra", "Muslim-Syed", "Muslim-Sheik", "Muslim-Siddiqui", "Muslim-Shafi", "Muslim-Mohammed"],
+    others: ["No caste"],
+  };
+
+  const handleReligionChange = (e) => {
+    const selectedReligion = e.target.value;
+    setFormData({ ...formData, religion: selectedReligion, caste: '' });
+  };
+
   const validateName = (name) => {
     const nameRegex = /^[A-Z][a-z]+(\s[A-Z][a-z]+)*$/;
     return nameRegex.test(name);
@@ -72,13 +85,51 @@ const ProfileForm = () => {
   return emailRegex.test(email);
 };
 
-
-
-
   const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@./]{8,}$/;
     return passwordRegex.test(password);
   };
+
+  const handlePhoneKeyDown = (e) => {
+    if (e.key === 'Tab') {
+      console.log("Tab key pressed, checking phone number...");
+      if (formData.phone) {
+        checkPhoneNumberExistence(formData.phone);
+      }
+    }
+  };
+  
+  const handlePhoneBlur = () => {
+    console.log("Phone blur triggered for:", formData.phone); 
+    if (formData.phone) {
+      checkPhoneNumberExistence(formData.phone);
+    }
+  };
+
+useEffect(() => {
+  if (formData.phone) {
+    checkPhoneNumberExistence(formData.phone);
+  }
+}, [formData.phone]); 
+
+const checkPhoneNumberExistence = (phone) => {
+  // console.log("Checking phone number:", phone);
+  axios
+    .get(`http://localhost:8081/checkPhoneNumber/${phone}`)
+    .then((response) => {
+      // console.log('Response from backend:', response.data);
+      if (response.data.exists) {
+        setPhoneError('Phone number already registered.');
+      } else {
+        setPhoneError('');
+      }
+    })
+    .catch((error) => {
+      console.error('Error checking phone number:', error);
+      setPhoneError('There was an error checking the phone number.');
+    });
+};
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -157,20 +208,13 @@ const ProfileForm = () => {
     axios.post('http://localhost:8081/register', { formData })
       .then(res => {
         console.log("Registered successfully!");
-        
-        // After successful registration, trigger email confirmation
-        axios.post('http://localhost:8081/send-confirmation-email', {
-          email: formData.email, // Send the user's email
-        })
-        .then(response => {
-          console.log("Confirmation email sent!");
-          // You can also show a message to the user to check their inbox
-          alert("Please check your inbox for a confirmation email.");
-        })
-        .catch(err => {
-          console.error("Error sending confirmation email:", err);
-        });
-  
+        setIsSubmitted(true);
+        window.location.reload();
+      })
+      .catch(err => {
+        console.log("Error during registration:", err);
+        setIsSubmitted(false);
+
         const newUserId = userId + 1;
         setUserId(newUserId);
         localStorage.setItem('userId', newUserId);
@@ -182,6 +226,62 @@ const ProfileForm = () => {
         console.log("Error during registration:", err);
         setIsSubmitted(false);
       });
+  };
+
+  const sendConfirmationEmail = (email) => {
+  if (validateEmail(email)) {
+    axios
+      .post('http://localhost:8081/sendConfirmationEmail', { email })
+      .then((response) => {
+        console.log("email response:", response);
+        console.log("verified response:", response.data === 'Email already verified');
+        if (response.data === 'Email already verified'){
+          setIsEmailConfirmed(true);
+          alert('Email already verified');
+        } else {
+          alert(response.data);
+          setIsEmailConfirmed(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error sending confirmation email:', error);
+        setEmailError(error.response?.data || 'Error sending confirmation email');
+      });
+  } else {
+    setEmailError('Invalid email address.');
+  }
+};
+
+
+  const clearForm = () => {
+    setFormData({
+      name: '',
+      age: '',
+      gender: '',
+      email: '',
+      phone: '',
+      state: '',
+      maritalStatus: '',
+      religion: '',
+      caste: '',
+      height: '',
+      weight: '',
+      profilePicture: '',
+      interests: '',
+      aboutMe: '',
+      password: '',
+    });
+    setValue([]);
+    setIsSubmitted(false);
+    setPhoneError('');
+    setEmailError('');
+    setPasswordError('');
+    setNameError('');
+    setAgeError('');
+    setIsEditingProfilePic(false);
+
+    const formElement = document.querySelector('form');
+    if (formElement) formElement.reset();
   };
   
   
@@ -196,13 +296,19 @@ const ProfileForm = () => {
           <Name value={formData.name} onChange={handleChange}/>
             {nameError && <p className="error">{nameError}</p>}
 
-          <Email value={formData.email} onChange={handleChange}/>
-            {emailError && <p className="error">{emailError}</p>}
+          <Email
+          email={formData.email}
+          onChange={handleChange}
+          emailError={emailError}
+          onTabPress={sendConfirmationEmail}
+          isEmailConfirmed={isEmailConfirmed}
+          setIsEmailConfirmed={setIsEmailConfirmed}
+        />
 
           <Password value={formData.password} onChange={handleChange}/>
             {passwordError && <p className="error">{passwordError}</p>}
 
-          <Phone value={formData.phone} onChange={handleChange}/>
+          <Phone value={formData.phone} onChange={handleChange} onBlur={handlePhoneBlur} onKeydown={handlePhoneKeyDown}/>
             {phoneError && <p className="error">{phoneError}</p>}
           
           
@@ -218,9 +324,8 @@ const ProfileForm = () => {
           <div className="form-group">
             <MaritalStatus value={formData.maritalStatus} onChange={handleChange} />
             
-            <Religion value={formData.religion} onChange={handleChange} />
-            
-            <Caste value={formData.caste} onChange={handleChange}/>
+            <Religion value={formData.religion} onChange={handleReligionChange} />
+            <Caste value={formData.caste} onChange={handleChange} options={religionCasteOptions[formData.religion]} />
 
             <Height value={formData.height} onChange={handleChange} />
 
@@ -251,6 +356,7 @@ const ProfileForm = () => {
 
         <div className="form-group">
           <input type="submit" value="Create Profile" />
+          <button type='button' onClick={clearForm}>Reset</button>
         </div>
 
       </form>

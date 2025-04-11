@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHome, FaInfoCircle, FaUserPlus, FaUser, FaPhone } from 'react-icons/fa';
+import { FaHome, FaInfoCircle, FaUserPlus, FaUser, FaPhone, FaMarsDouble } from 'react-icons/fa';
 import { FaMoon, FaSun } from 'react-icons/fa';
 import '../App.css';
 
@@ -28,6 +28,8 @@ const Header = () => {
           <li><Link to="/register"><FaUserPlus /> Register</Link></li>
           <li><Link to="/Support"><FaPhone /> Support</Link></li>
           <li><Link to="/profile"><FaUser /> Profile</Link></li>
+          <li><Link to="/matches"><FaMarsDouble /> Matches</Link></li>
+          <li><Link to="/subscriptions"><FaMarsDouble /> Subscriptions</Link></li>
         </ul>
         
         <div className="theme-toggle">

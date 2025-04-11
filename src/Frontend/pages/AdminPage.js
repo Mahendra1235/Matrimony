@@ -8,6 +8,7 @@ const AdminPage = () => {
   const [filteredRegistrations, setFilteredRegistrations] = useState([]);
   const [editing, setEditing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [sortList, setSortList] = useState({key:null, direction:'ascending'});
   const [currentData, setCurrentData] = useState({
     username: '',
     Email: '',
@@ -40,6 +41,27 @@ const AdminPage = () => {
     State: [],
     Status: []
   });
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortList.key === key && sortList.direction === 'ascending') {
+      direction = 'descending';
+    }
+  
+    const sortedData = [...filteredRegistrations].sort((a, b) => {
+      if (a[key] < b[key]) {
+        return direction === 'ascending' ? -1 : 1;
+      }
+      if (a[key] > b[key]) {
+        return direction === 'ascending' ? 1 : -1;
+      }
+      return 0;
+    });
+  
+    setSortList({ key, direction });
+    setFilteredRegistrations(sortedData);
+  };
+  
   
   const [message, setMessage] = useState(''); 
 
@@ -552,25 +574,27 @@ const AdminPage = () => {
       <table className="registration-table">
         <thead>
           <tr>
-            <th>UserId</th>
-            <th>username</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>State</th>
-            <th>Religion</th>
-            <th>Caste</th>
-            <th>Marital Status</th>
-            <th>Height</th>
-            <th>Weight</th>
-            <th>Profile Picture</th>
-            <th>Interests</th>
-            <th>About Me</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+            
+    <th onClick={() => handleSort('UserId')}>UserId {sortList.key === 'UserId' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('username')}>username {sortList.key === 'username' && (sortList.direction === 'ascending' ?'▲' : '▼')}</th>
+    <th onClick={() => handleSort('Email')}>Email {sortList.key === 'Email' && (sortList.direction === 'ascending' ?'▲' : '▼')}</th>
+    <th onClick={() => handleSort('Phone_number')}>PhoneNumber {sortList.key === 'Phone_number' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Age')}>Age {sortList.key === 'Age' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Gender')}>Gender {sortList.key === 'Gender' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('State')}>State {sortList.key === 'State' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Religion')}>Religion {sortList.key === 'Religion' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Caste')}>Caste {sortList.key === 'Caste' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Marital_Status')}>Marital Status {sortList.key === 'Marital_Status' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Height')}>Height {sortList.key === 'Height' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Weight')}>Weight {sortList.key === 'Weight' && (sortList.direction === 'ascending' ?'▲' : '▼')}</th>
+    <th onClick={() => handleSort('Weight')}>ProfilePicture {sortList.key === 'Profile_picture' && (sortList.direction === 'ascending' ?'▲' : '▼')}</th>
+    <th onClick={() => handleSort('Interests')}>Interests {sortList.key === 'Interests' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('About')}>About {sortList.key === 'About' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th onClick={() => handleSort('Status')}>Status {sortList.key === 'Status' && (sortList.direction === 'ascending' ? '▲' : '▼')}</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+            
         <tbody>
           {filteredRegistrations.map((registration, index) => (
             <tr key={`${registration.UserId}-${index}`}>

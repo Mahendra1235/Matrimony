@@ -1,6 +1,4 @@
-import React from "react";
-
-const Caste = ({ value, onChange }) => {
+const Caste = ({ value, onChange, options }) => {
   return (
     <div className="form-group">
       <label>Caste</label>
@@ -11,10 +9,9 @@ const Caste = ({ value, onChange }) => {
         required
       >
         <option value="">Select...</option>
-        <option value="OC">OC</option>
-        <option value="BC">BC</option>
-        <option value="SC">SC</option>
-        <option value="Others">Others</option>
+        {options && options.map(option => (
+          <option key={option} value={option}>{option}</option>
+        ))}
       </select>
     </div>
   );

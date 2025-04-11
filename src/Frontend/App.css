@@ -119,6 +119,7 @@ header {
   
   .form-group {
     margin-bottom: 20px;
+    justify-content: center;
   }
   
   .form-group label {
@@ -242,13 +243,44 @@ header {
     }
   }
   
+  .password-input-container {
+    position: relative;
+    display: flex;
+    align-items:end;
+  }
+  
+  .password-input-container input {
+    width: 100%;
+    padding: 12px;
+    padding-right: 10px; /* Add padding to the right to make space for the icon */
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .password-toggle-button {
+    position:absolute;
+    right: 0px; /* Position the button inside the input field */
+    background: none;
+    width: 5%;
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+    
+  }
+  
+  .password-toggle-button:hover {
+    color: #007bff;
+  }
+  
+  
   
   /* About Section Styles */
   .about-container {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 20px;
-    border-radius: 50px;
+    max-width: 1900px;
+    margin: 30px;
+    padding: 40px;
+    border-radius: 15px;
     background-color: white;
   }
   
@@ -279,7 +311,7 @@ header {
   .contact-match-container, .Create-profile, .technical-issues-container {
     max-width: 900px;
     margin: 30px auto;
-    padding: 20px;
+    padding: 40px;
     background-color: #ffffff;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -307,6 +339,10 @@ header {
   .technical-issues-container p {
     font-size: 16px;
     line-height: 1.6;
+  }
+
+  .technical-issues-container h2 {
+    text-align: left;
   }
   
   /* Home Page  */
@@ -818,8 +854,6 @@ input[type="radio"]:focus {
     font-size: 24px;
   }
 }
-
-  
   
   /* Support Component */
   .support-container {
@@ -987,6 +1021,19 @@ input[type="radio"]:focus {
 
 button {
   margin-right: 5px; 
+  font-size: 14px;
+  background-color: rgba(128, 128, 128, 0.478);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  width: 100%;
+}
+
+button:hover {
+  background-color: grey;
 }
 
 /* Container for buttons */
@@ -1047,15 +1094,16 @@ button {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
   width: 100%;
-  max-width: 800px;
   display: flex;
-  gap: 20px;
+  gap: 10px;
   margin: 0 auto;
   max-width: 2000px;
+  flex-wrap: wrap;
+  flex-direction: row;
 }
 
 .edit-form h3 {
-  text-align: center;
+  text-align: left;
   color: #333;
   margin-bottom: 10px;
 }
@@ -1078,7 +1126,7 @@ button {
 }
 
 .edit-form textarea {
-  height: 120px;
+  height: 100px;
   resize: vertical;
 }
 
@@ -1108,7 +1156,7 @@ button {
 /* Filter Section  */
 .filter-section {
   background-color: #f9f9f9;
-  padding: 20px;
+  padding: 10px;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
@@ -1142,7 +1190,7 @@ button {
 }
 
 .filter-section button {
-  padding: 20px;
+  padding: 10px;
   background-color: #4CAF50;
   color: white;
   font-size: 1rem;
@@ -1345,4 +1393,322 @@ body.dark-mode {
 
 .theme-toggle-btn:hover {
   color: #ffb347; 
+}
+
+
+/* Profile Container */
+.profile {
+  width: 95%;
+  margin: 1rem auto;
+  padding: 1.5rem;
+  background-color: #f7f3f3;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;  
+}
+
+.profile h2 {
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+}
+
+.profile img {
+  display: block;
+  max-width: 150px;
+  width: 100%;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.profile p {
+  font-size: 1rem;
+  color: #555;
+  text-align: left;
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+.profile h3 {
+  font-size: 1.5rem;
+  color: #444;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* Interest Button */
+button {
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem;
+  margin: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: #464343;
+
+}
+
+button:hover {
+  background-color: #0066cc;
+  color: white;
+}
+
+button:focus {
+  outline: none;
+}
+
+/* Contact Options */
+.contact-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.contact-btn {
+  display: flex;
+  align-items: center;
+  background-color: #464343;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  margin: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 200px; /* Fixed width for contact buttons */
+  justify-content: center;
+}
+
+.contact-btn:hover {
+  background-color: #0066cc;
+  color: white;
+}
+
+.contact-btn .fa-icon {
+  margin-right: 0.5rem;
+}
+
+/* Popup Message */
+.popup-message {
+  background-color: #28a745;
+  color: white;
+  padding: 1rem;
+  border-radius: 5px;
+  text-align: center;
+  margin-top: 1rem;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1.5s ease;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Show/Hide Phone */
+.profile p.phone-number {
+  font-size: 1rem;
+  color: #333;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .profile {
+    padding: 1rem;
+    width: 95%;
+  }
+
+  .profile h2 {
+    font-size: 1.8rem;
+  }
+
+  .profile h3 {
+    font-size: 1.3rem;
+  }
+
+  .profile p {
+    font-size: 0.9rem;
+  }
+
+  .contact-btn {
+    width: 45%; /* Adjust the width for smaller screens */
+    margin: 0.5rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .profile h2 {
+    font-size: 1.5rem;
+  }
+
+  .profile h3 {
+    font-size: 1.2rem;
+  }
+
+  .profile p {
+    font-size: 0.85rem;
+  }
+
+  .contact-options {
+    flex-direction: column; /* Stack buttons vertically on small screens */
+    align-items: center;
+  }
+
+  .contact-btn {
+    width: 80%; /* Make buttons full width on very small screens */
+    margin: 0.5rem 0;
+  }
+}
+
+.chatbox {
+  position:fixed;
+  bottom: 20px;
+  top: 90px;
+  right: 10px;
+  width: 500px;
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+
+.chatbox-header {
+  display:contents;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chatbox-messages {
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+textarea {
+  width: 100%;
+  height: 50px;
+  padding: 5px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+button {
+  padding: 8px 15px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.close-chat-btn {
+  background-color: transparent;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  text-align: right;
+}
+
+.membership-section {
+  margin-top: 0px;
+  padding: 0px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  height: 888px;
+  background-image: url('/public/Background image1.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: fit-content;
+}
+
+.membership-options {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+}
+
+.membership-card {
+  padding: 15px;
+  border: 2px solid #ccc;
+  border-radius: 15px;
+  width: 400px;
+  text-align: center;
+  background-color: #fff;
+  background-color: rgb(225, 220, 220);
+
+}
+
+.membership-card.selected {
+  border-color: #007bff;
+  background-color: #e6f0ff;
+}
+
+.membership-card h4 {
+  margin: 0 0 10px;
+}
+
+.selected-package-info {
+  margin-top: 15px;
+  font-style: italic;
+  color: #007bff;
+}
+
+.membership-card p strong {
+  font-size: 1.1em;
+  color: #333;
+}
+
+.pay-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.pay-button:hover {
+  background-color: #218838;
+}
+
+.payment-success-message {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  font-weight: 500;
+  
 }

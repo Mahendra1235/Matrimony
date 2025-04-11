@@ -28,9 +28,10 @@ const MatchList = () => {
         setLoading(false);
       });
   }, []);
+  
 
-  const handleViewClick = (index) => {
-    navigate(`/viewmatchlist/${index}`);
+  const handleViewClick = (match) => {
+    navigate(`/viewmatchlist/${match.name}`, { state: { match } });
   };
 
   const handleFilterChange = (e) => {
@@ -93,7 +94,7 @@ const MatchList = () => {
             name="interests"
             value={filter.interests}
             onChange={handleFilterChange}
-            >
+          >
             <option value="">All</option>
             <option value="Music">Music</option>
             <option value="Yoga">Yoga</option>
@@ -116,7 +117,7 @@ const MatchList = () => {
             <p>Age: {match.age}</p>
             <p>Caste: {match.caste}</p>
             <p>Interests: {match.interests}</p>
-            <button className="btn" onClick={() => handleViewClick(index)}>
+            <button className="btn" onClick={() => handleViewClick(match)}>
               View
             </button>
           </div>

@@ -28,6 +28,29 @@ db.connect((err) => {
     console.log('Connected to the database');
 });
 
+// Route to check if the phone number already exists
+app.get('/checkPhoneNumber/:phone', (req, res) => {
+  const { phone } = req.params;
+
+  const sql = "SELECT COUNT(*) AS count FROM users WHERE phone_number = ?";
+  db.query(sql, [phone], (err, result) => {
+    if (err) {
+      console.error('Error checking phone number:', err);
+      return res.status(500).json({ error: 'Failed to check phone number' });
+    }
+
+    // console.log('DBQuery result:', result);  // Add this log to check the result from DB
+
+    if (result[0].count > 0) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+
+    }
+  });
+});
+
+
 //Fetch register form data//
 app.post('/register', (req, res) => {
     console.log('Requesting:', req.body.formData);
@@ -141,8 +164,12 @@ app.put('/admin/registrations/:id', (req, res) => {
 
 // To fetch match data
 app.get('/api/matches', (req, res) => {
-    const query = 'SELECT name, age, caste, interests, profilepicture FROM matches';
-    db.query(query, (err, results) => {
+  const query = `
+    SELECT username AS name, age, caste, interests, height, weight, state, Profile_Picture AS profilepicture, phone_number
+    FROM users 
+    WHERE status = 'active'`;
+  
+  db.query(query, (err, results) => {
     if (err) {
       res.status(500).send({ message: 'Error fetching matches' });
     } else {
@@ -152,10 +179,87 @@ app.get('/api/matches', (req, res) => {
 });
 
 
+// Endpoint to get user profile based on userId
+app.post('/api/profile', (req, res) => {
+  const { username, password } = req.body;  
+
+  // Query to verify user credentials
+  const query = `SELECT 
+    username, 
+    email, 
+    phone_number, 
+    age, 
+    gender, 
+    interests, 
+    state, 
+    religion, 
+    caste, 
+    marital_status, 
+    height, 
+    weight, 
+    profile_picture, 
+    about_me, 
+    status 
+    FROM users WHERE username = ? AND password = ?`;
+
+  db.query(query, [username, password], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send({ message: 'Error fetching profile data' });
+    } else {
+      if (results.length > 0) {
+        res.json(results[0]); 
+      } else {
+        res.status(404).send({ message: 'User not found or incorrect password' });
+      }
+    }
+  });
+});
+
+
+// Endpoint to update user profile based on username and password
+app.put('/api/profile', (req, res) => {
+  const { username, password, email, phone_number, age, gender, interests, state, religion, caste, marital_status, height, weight, profile_picture, about_me, status } = req.body;
+
+  // Query to update user profile
+  const query = `UPDATE users 
+                 SET email = ?, 
+                     phone_number = ?, 
+                     age = ?, 
+                     gender = ?, 
+                     interests = ?, 
+                     state = ?, 
+                     religion = ?, 
+                     caste = ?, 
+                     marital_status = ?, 
+                     height = ?, 
+                     weight = ?, 
+                     profile_picture = ?, 
+                     about_me = ?, 
+                     status = ?
+                 WHERE username = ? AND password = ?`;
+
+  db.query(query, [email, phone_number, age, gender, interests, state, religion, caste, marital_status, height, weight, profile_picture, about_me, status, username, password], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send({ message: 'Error updating profile data' });
+    } else {
+      if (results.affectedRows > 0) {
+        res.json({ message: 'Profile updated successfully' });
+      } else {
+        res.status(404).send({ message: 'User not found or incorrect password' });
+      }
+    }
+  });
+});
+
+
+
+
 // To Activate user
 app.put('/admin/registrations/:id/activate', (req, res) => {
-  const { id } = req.params;  // This is expected to be the correct UserID
-  console.log("Activating UserId:", id);  // Debugging log
+  const { id } = req.params;
+  console.log("Activating UserId:", id);
   const sql = 'UPDATE users SET Status = ? WHERE UserId = ?';
   const values = ['Active', id];
 
@@ -170,8 +274,8 @@ app.put('/admin/registrations/:id/activate', (req, res) => {
 
 // To Deactivate user
 app.put('/admin/registrations/:id/deactivate', (req, res) => {
-  const { id } = req.params;  // This is expected to be the correct UserID
-  console.log("Deactivating UserId:", id);  // Debugging log
+  const { id } = req.params;
+  console.log("Deactivating UserId:", id);
   const sql = 'UPDATE users SET Status = ? WHERE UserId = ?';
   const values = ['Inactive', id];
 
@@ -192,7 +296,12 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: 'maheshrock.4550@gmail.com',
     pass: 'rkqs dgav tase ayky',  
-  }
+  },
+  // port: 587,
+  // host: 'smtp.gmail.com',
+  // tls: {
+  //   rejectUnauthorized: false,
+  // },
 });
 const generateResetToken = () => {
   return crypto.randomBytes(20).toString('hex')
@@ -260,162 +369,265 @@ app.post('/reset-password', (req, res) => {
 });
 
 
-
-// Sample user data (you would get this from your database after registration)
-// let users = [
-//   { email: 'maheshrock.4550@gmail.com', name: 'Mahe' },
-// ];
-
-// // Route to send confirmation email
-// app.post('/send-confirmation-email', (req, res) => {
+// Route to send confirmation email
+// app.post('/sendConfirmationEmail', (req, res) => {
 //   const { email } = req.body;
   
-//   // Generate a confirmation token
+//   // Generate a random token
 //   const token = crypto.randomBytes(16).toString('hex');
   
-//   // Compose the confirmation email
-//   const mailOptions = {
-//     from: 'maheshrock.4550@gmail.com', 
-//     to: email, 
-//     subject: 'Email Confirmation',
-//     text: `Hello, please confirm your email address by clicking the following link: 
-//     http://localhost:8081/confirm-email?token=${token}`,
-//   };
-
-//   // Send the email
-//   transporter.sendMail(mailOptions, (error, info) => {
-//     if (error) {
-//       console.log('error sending email:' , error);
+//   // Set token expiry time (e.g., 1 hour from now)
+//   const expiryTime = Date.now() + 3600000; // 1 hour in milliseconds
+  
+//   // Store the token and its expiry in the database for the user
+//   const query = 'UPDATE users SET verification_token = ?, verification_token_expiry = ?';
+  
+//   db.query(query, [token, expiryTime, email], (err, result) => {
+//     if (err) {
+//       console.log('Error updating token:', err);
+//       return res.status(500).send('Error saving token in the database');
 //     }
-//     console.log('Email sent: ' + info.response);
+    
+//     // Send confirmation email with the generated token
+//     const mailOptions = {
+//       from: 'test@gmail.com', 
+//       to: email,               
+//       subject: 'Email Confirmation',
+//       text: `Hello, please confirm your email address by clicking the following link:
+//       http://localhost:8081/confirm-email?token=${token}`,
+//     };
+
+//     transporter.sendMail(mailOptions, (error, info) => {
+//       if (error) {
+//         console.log('Error sending email:', error);
+//         return res.status(500).send('Error sending confirmation email');
+//       }
+
+//       console.log('Email sent: ' + info.response);
+//       res.status(200).send({ message: 'Confirmation email sent!', token: token });
+//     });
 //   });
 // });
 
-// // Route to handle email confirmation
+// // Route to handle email confirmation (simplified version)
 // app.get('/confirm-email', (req, res) => {
-//   const { token } = req.query;
-//   res.send('Email confirmed!');
+//   const { token } = req.query; // Token from the URL
+
+//   if (!token) {
+//     return res.status(400).send('Token is required');
+//   }
+
+//   const query = 'SELECT * FROM users WHERE verification_token = ?';
+//   const currentTime = Date.now();
+
+//   db.query(query, [token], (err, results) => {
+//     if (err) {
+//       console.log('Error verifying token:', err);
+//       return res.status(500).send('Error verifying token');
+//     }
+
+//     if (results.length === 0) {
+//       console.log('No user found with the provided token');
+//       return res.status(400).send('Invalid or expired token');
+//     }
+
+//     const user = results[0];
+
+//     // Check if the token is expired
+//     if (user.verification_token_expiry < currentTime) {
+//       console.log(`Token expired. Expiry: ${user.verification_token_expiry}, Current time: ${currentTime}`);
+//       return res.status(400).send('Invalid or expired token');
+//     }
+
+//     const userId = user.UserId;
+
+//     const updateQuery = 'UPDATE users SET email_verified = 1 WHERE UserId = ?';
+    
+//     db.query(updateQuery, [userId], (err, result) => {
+//       if (err) {
+//         console.log('Error updating email verification:', err);
+//         return res.status(500).send('Error updating email verification');
+//       }
+
+//       const clearTokenQuery = 'UPDATE users SET verification_token = NULL, verification_token_expiry = NULL WHERE UserId = ?';
+//       db.query(clearTokenQuery, [userId], (err, result) => {
+//         if (err) {
+//           console.log('Error clearing token:', err);
+//         }
+
+//         // Send success message to the user
+//         console.log('Email successfully confirmed!');
+//         res.send('Email confirmed successfully!');
+//       });
+//     });
+//   });
 // });
 
+function sendConfirmationEmailToUser(email, token) {
+  const confirmationUrl = `http://localhost:8081/confirm-email?token=${token}`;
 
-// Route to send confirmation email
-app.post('/send-confirmation-email', (req, res) => {
+  const mailOptions = {
+    from: 'your-email@gmail.com',
+    to: email,
+    subject: 'Email verification',
+    text: `Click the link below to confirm your email address:\n\n${confirmationUrl}`,
+  };
+
+  // Send the email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log('Error sending email:', error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+}
+// Route to handle email confirmation request
+app.post('/sendConfirmationEmail', (req, res) => {
   const { email } = req.body;
 
-  // Query the database to check if the email exists
-  db.execute('SELECT * FROM users WHERE Email = ?', [email], (err, results) => {
+  if (!email) {
+    return res.status(400).send('Email is required');
+  }
+
+  // Step 1: Check if email is already verified in users or email_verification tables
+  const checkEmailQuery = `
+    (SELECT email, email_verified FROM users WHERE email = ? AND email_verified = 1)
+    UNION
+    (SELECT email, email_verified FROM email_verification WHERE email = ? AND email_verified = 1)
+  `;
+
+  db.query(checkEmailQuery, [email, email], (err, results) => {
     if (err) {
-      console.error('Error fetching user from database:', err);
-      return res.status(500).send('Error fetching user data');
+      console.log('Error checking email:', err);
+      return res.status(500).send('Error checking email');
     }
 
-    if (results.length === 0) {
-      return res.status(404).send('User not found');
+    // Step 2: If the email is already verified in either table, return a message and don't send a new confirmation email
+    if (results.length > 0) {
+      return res.status(200).send('Email already verified');
     }
 
-    // Check if the email has already been confirmed
-    if (results[0].isEmailConfirmed) {
-      return res.status(400).send('Email already confirmed');
-    }
+    // Step 3: Check if email exists in email_verification table but not verified (email_verified = 0)
+    const checkEmailInVerificationTable = 'SELECT * FROM email_verification WHERE email = ? AND email_verified = 0';
 
-    // Generate a confirmation token
-    const token = crypto.randomBytes(16).toString('hex');
-
-    // Store the token in the database for later confirmation check
-    db.execute('UPDATE users SET confirmationToken = ? WHERE Email = ?', [token, email], (err, result) => {
+    db.query(checkEmailInVerificationTable, [email], (err, verificationResults) => {
       if (err) {
-        console.error('Error storing confirmation token:', err);
-        return res.status(500).send('Error storing token');
-      }
-    });
-
-    // Compose the confirmation email
-    const mailOptions = {
-      from: 'test@gmail.com',
-      to: email,
-      subject: 'Email Confirmation',
-      text: `Hello, please confirm your email address by clicking the following link:
-      http://localhost:8081/confirm-email?token=${token}`,
-    };
-
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log('Error sending email:', error);
-        return res.status(500).send('Error sending confirmation email');
+        console.log('Error checking email in email_verification table:', err);
+        return res.status(500).send('Error checking email');
       }
 
-      console.log('Email sent: ' + info.response);
-      res.send('Confirmation email sent!');
+      console.log('Verification Results:', verificationResults); // Log verification results to ensure the data exists
+
+      // Step 4: If the email exists and is unverified, send the confirmation link
+      if (verificationResults.length > 0) {
+        const user = verificationResults[0];
+
+        console.log('User Record Found:', user); // Log user to see the actual values
+
+        // Check if 'UserId' exists before proceeding
+        if (!user.UserId) {
+          console.log('No UserId found:', user); // This will show if the UserId is missing
+          return res.status(400).send('User record not found or UserId is missing in email_verification table.');
+        }
+
+        const token = crypto.randomBytes(20).toString('hex');
+        const expirationTime = Date.now() + 3600000; // 1 hour expiration
+
+        // Step 5: Ensure user record exists in email_verification and update token
+        const updateTokenQuery = 'UPDATE email_verification SET verification_token = ?, verification_token_expiry = ? WHERE UserId = ?';
+
+        db.query(updateTokenQuery, [token, expirationTime, user.UserId], (err, result) => {
+          if (err) {
+            console.log('Error updating token:', err);
+            return res.status(500).send('Error updating token');
+          }
+
+          // Send the confirmation email
+          sendConfirmationEmailToUser(email, token);
+
+          return res.status(200).send('Confirmation email sent. Please check your inbox.');
+        });
+      } else {
+        // Step 6: If the email is not found in the verification table, create a new entry with email_verified = 0
+        const token = crypto.randomBytes(20).toString('hex');
+        const expirationTime = Date.now() + 3600000; // 1 hour expiration
+
+        const insertEmailQuery = 'INSERT INTO email_verification (email, verification_token, verification_token_expiry, email_verified) VALUES (?, ?, ?, 0)';
+
+        db.query(insertEmailQuery, [email, token, expirationTime], (err, result) => {
+          if (err) {
+            console.log('Error inserting email:', err);
+            return res.status(500).send('Error inserting email');
+          }
+
+          // Send the confirmation email
+          sendConfirmationEmailToUser(email, token);
+
+          return res.status(200).send('Confirmation email sent. Please check your inbox.');
+        });
+      }
     });
   });
 });
+
+
 
 // Route to handle email confirmation
 app.get('/confirm-email', (req, res) => {
   const { token } = req.query;
 
-  // Query to check if the token matches a user in the database
-  db.execute('SELECT * FROM users WHERE confirmationToken = ?', [token], (err, results) => {
-    if (err) {
-      console.error('Error fetching user by token:', err);
-      return res.status(500).send('Error confirming email');
-    }
-
-    if (results.length === 0) {
-      return res.status(404).send('Invalid token');
-    }
-
-    // Update the user to mark email as confirmed and remove the token
-    db.execute('UPDATE users SET isEmailConfirmed = 1, confirmationToken = NULL WHERE confirmationToken = ?', [token], (err, result) => {
-      if (err) {
-        console.error('Error updating email confirmation status:', err);
-        return res.status(500).send('Error confirming email');
-      }
-
-      res.send('Email confirmed!');
-    });
-  });
-});
-
-// Route to store user data in the database (after email confirmation)
-app.post('/register', (req, res) => {
-  const { formData } = req.body;
-
-  if (!formData.email || !formData.password) {
-    return res.status(400).send('Email and password are required.');
+  if (!token) {
+    return res.status(400).send('Token is required');
   }
 
-  // Check if the email is confirmed
-  db.execute('SELECT * FROM users WHERE Email = ?', [formData.email], (err, results) => {
+  const query = 'SELECT * FROM email_verification WHERE verification_token = ?';
+  const currentTime = Date.now();
+
+  db.query(query, [token], (err, results) => {
     if (err) {
-      console.error('Error fetching user from database:', err);
-      return res.status(500).send('Error fetching user data');
+      console.log('Error verifying token:', err);
+      return res.status(500).send('Error verifying token');
     }
 
     if (results.length === 0) {
-      return res.status(404).send('User not found');
+      return res.status(400).send('Invalid or expired token');
     }
 
-    // Check if email is confirmed
-    if (!results[0].isEmailConfirmed) {
-      return res.status(400).send('Email is not confirmed. Please confirm your email before proceeding.');
+    const user = results[0];  // Accessing the first row of the result set
+    console.log('Token:', token);
+    console.log('Token Expiry:', user.verification_token_expiry);
+    console.log('Current Time:', currentTime);
+
+    // Check if the token is expired
+    if (user.verification_token_expiry < currentTime) {
+      console.log('Token has expired');
+      return res.status(400).send('Token has expired');
     }
 
-    // Store the user data in the database
-    db.execute('INSERT INTO users SET ?', formData, (err, result) => {
+    // Update the email verification status
+    const updateQuery = 'UPDATE email_verification SET email_verified = 1 WHERE UserId = ?';
+    
+    db.query(updateQuery, [user.UserId], (err, result) => {
       if (err) {
-        console.error('Error storing user data:', err);
-        return res.status(500).send('Error storing user data');
+        console.log('Error updating email verification:', err);
+        return res.status(500).send('Error updating email verification');
       }
-
-      res.send('User registered successfully!');
+    
+      console.log('Update result:', result); // Log the result to see if the query affected any rows
+      if (result.affectedRows === 0) {
+        console.log('No rows were updated. Check if the UserId exists in the table.');
+        return res.status(400).send('No matching record found for this email.');
+      }
+    
+      console.log('Email successfully confirmed!');
+      res.send('Email confirmed successfully!');
     });
+    
   });
 });
-
 
 
 app.listen(8081, () => {
-    console.log("Server listening on port 8081");
+  console.log("Server listening on port 8081");
 });
