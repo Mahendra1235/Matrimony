@@ -1,35 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
+import GooglePayComponent from "./GooglePayComponent";
 
-const Subscriptions = () => {
-  const [selectedPackage, setSelectedPackage] = useState('');
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-
+const Subscriptions = ({ selectedPlan, setSelectedPlan, isPaymentDone,setIsPaymentDone }) => {
   const membershipPlans = [
-    {
-      name: 'Basic',
-      price: '₹0/month',
-      description: 'Free access to limited features.',
-      view:'Can only view profiles',
-      
-    },
-    {
-      name: 'Premium',
-      price: '₹499/month',
-      description: 'Access to chat and email.',
-    },
-    {
-      name: 'Elite',
-      price: '₹999/month',
-      description: 'Full access including phone number.',
-    },
+    { name: 'Basic', price: '₹0/month', description: 'Free access to limited features.' },
+    { name: 'Premium', price: '₹499/month', description: 'Access to chat and email.' },
+    { name: 'Elite', price: '₹999/month', description: 'Full access including phone number.' },
   ];
-
-  const handlePayment = () => {
-    setTimeout(() => {
-      setPaymentSuccess(true);
-      alert(`Payment successful for the ${selectedPackage} plan!`);
-    }, 1000);
-  };
 
   return (
     <div className="membership-section">
@@ -38,34 +15,40 @@ const Subscriptions = () => {
         {membershipPlans.map((plan) => (
           <div
             key={plan.name}
-            className={`membership-card ${selectedPackage === plan.name ? 'selected' : ''}`}
+            className={`membership-card ${selectedPlan === plan.name ? 'selected' : ''}`}
           >
             <h4>{plan.name} Plan</h4>
             <p><strong>{plan.price}</strong></p>
             <p>{plan.description}</p>
             <button onClick={() => {
-              setSelectedPackage(plan.name);
-              setPaymentSuccess(false);
+              setSelectedPlan(plan.name);
+              setIsPaymentDone(false);
             }}>
-              {selectedPackage === plan.name ? 'Selected' : 'Choose'}
+              {selectedPlan === plan.name ? 'Selected' : 'Choose'}
             </button>
           </div>
         ))}
       </div>
 
-      {selectedPackage && (
+      {selectedPlan && (
         <div className="selected-package-info">
-          <p>
-            You have selected the <strong>{selectedPackage}</strong> package.
-          </p>
-          {!paymentSuccess && selectedPackage !== 'Basic' && (
-            <button className="pay-button" onClick={handlePayment}>
-              Proceed to Payment
-            </button>
+          <p>You have selected the <strong>{selectedPlan}</strong> package.</p>
+
+          {selectedPlan !== 'Basic' && (
+            <div style={{ marginTop: '20px' }}>
+              <GooglePayComponent
+                price={selectedPlan === 'Premium' ? '499.00' : selectedPlan === 'Elite' ? '999.00' : '0.00'}
+                onPaymentSuccess={() => {
+                  setIsPaymentDone(true);
+                  alert(`Payment successful for the ${selectedPlan} plan!`);
+                }}
+              />
+            </div>
           )}
-          {paymentSuccess && (
+
+          {(selectedPlan === 'Basic' || isPaymentDone) && (
             <p className="payment-success-message">
-              🎉 Payment successful! You are now subscribed to the <strong>{selectedPackage}</strong> plan🎉.
+              🎉 You are now subscribed to the <strong>{selectedPlan}</strong> plan! 🎉
             </p>
           )}
         </div>

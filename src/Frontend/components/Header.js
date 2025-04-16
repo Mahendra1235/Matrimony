@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaHome, FaInfoCircle, FaUserPlus, FaUser, FaPhone, FaMarsDouble } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaHome, FaInfoCircle, FaUserPlus, FaUser, FaPhone, FaMarsDouble, FaSignOutAlt } from 'react-icons/fa';
 import { FaMoon, FaSun } from 'react-icons/fa';
 import '../App.css';
+import { logout } from '../Redux/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 const Header = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setIsDarkMode((prevMode) => !prevMode);
+  };
+
+  const handleLogout = () =>{
+    dispatch(logout());
+    navigate('/');
   };
 
   useEffect(() => {
@@ -28,8 +38,16 @@ const Header = () => {
           <li><Link to="/register"><FaUserPlus /> Register</Link></li>
           <li><Link to="/Support"><FaPhone /> Support</Link></li>
           <li><Link to="/profile"><FaUser /> Profile</Link></li>
-          <li><Link to="/matches"><FaMarsDouble /> Matches</Link></li>
-          <li><Link to="/subscriptions"><FaMarsDouble /> Subscriptions</Link></li>
+          {isAuthenticated && (
+            <>
+              <li><Link to="/matches"><FaMarsDouble /> My Matches</Link></li>
+              <li>
+                <button onClick={handleLogout} className="logout-btn">
+                  <FaSignOutAlt /> Logout
+                </button>
+              </li>
+            </>
+          )}
         </ul>
         
         <div className="theme-toggle">

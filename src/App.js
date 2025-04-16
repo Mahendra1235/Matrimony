@@ -38,6 +38,8 @@ function App() {
         <Route path="/faq/technical-issues" element={<FAQTechnicalIssues />} />
         <Route path="reset-password/:token" element={<ResetPassword />} />
         <Route path="/subscriptions" element={<Subscriptions />} />
+        <Route path="/Subs" element={<App />} />
+
 
 
       </Routes>

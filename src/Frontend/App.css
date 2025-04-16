@@ -1712,3 +1712,16 @@ button:hover {
   font-weight: 500;
   
 }
+.logout-btn {
+  background:fixed;
+  border:#0056b3;
+  color: blue;
+  font: inherit;
+  display: flex;
+  align-items: right;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  color: red;
+}

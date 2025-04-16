@@ -12,6 +12,8 @@ const Profile = () => {
   const [showChat, setShowChat] = useState(false); 
   const [message, setMessage] = useState('');  
   const [chatMessages, setChatMessages] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
 
   const handleShowPhoneNumber = () => {
     setShowPhone(!showPhone);
@@ -45,28 +47,36 @@ const Profile = () => {
       <p>Interests: {selectedMatch.interests}</p>
       <h3>Interested? Connect now</h3>
 
-      <div className="contact-options">
-        <button onClick={handleChat} className="contact-btn">
-          <FontAwesomeIcon icon={faComment} /> Chat
-        </button>
+<div className="contact-options">
 
-        <button onClick={handleEmail} className="contact-btn">
-          <FontAwesomeIcon icon={faEnvelope} /> Email
-        </button>
+  {(isPaymentDone && (selectedPlan === 'Premium' || selectedPlan === 'Elite')) && (
+    <button onClick={handleChat} className="contact-btn">
+      <FontAwesomeIcon icon={faComment} /> Chat
+    </button>
+  )}
 
-        <button onClick={handleShowPhoneNumber} className="contact-btn">
-          <FontAwesomeIcon icon={faPhoneAlt} /> {showPhone ? 'Hide Phone Number' : 'Show Phone Number'}
-        </button>
+  {(isPaymentDone && (selectedPlan === 'Premium' || selectedPlan === 'Elite')) && (
+    <button onClick={handleEmail} className="contact-btn">
+      <FontAwesomeIcon icon={faEnvelope} /> Email
+    </button>
+  )}
 
-        {showPhone && selectedMatch?.phone_number ? (
-         <p>Phone Number: {selectedMatch.phone_number}</p>
-           ) : (
-           showPhone && <p>Phone number is unavailable</p>
-           )}
+  {(isPaymentDone && selectedPlan === 'Elite') && (
+    <button onClick={handleShowPhoneNumber} className="contact-btn">
+      <FontAwesomeIcon icon={faPhoneAlt} /> {showPhone ? 'Hide Phone Number' : 'Show Phone Number'}
+    </button>
+  )}
 
-      </div>
+  {(isPaymentDone && selectedPlan === 'Elite') && showPhone && (
+    selectedMatch?.phone_number ? (
+      <p>Phone Number: {selectedMatch.phone_number}</p>
+    ) : (
+      <p>Phone number is unavailable</p>
+    )
+  )}
+</div>
 
-      {/* Chatbox Modal */}
+
       {showChat && (
         <div className="chatbox">
           <div className="chatbox-header">
@@ -94,7 +104,12 @@ const Profile = () => {
         </div>
 
       )}
-  <Subscriptions />
+  <Subscriptions 
+    selectedPlan={selectedPlan}
+    setSelectedPlan={setSelectedPlan}
+    setIsPaymentDone={setIsPaymentDone}
+    isPaymentDone={isPaymentDone}
+  />
     </div>
   );
 };

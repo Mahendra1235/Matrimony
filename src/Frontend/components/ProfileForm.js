@@ -110,7 +110,7 @@ useEffect(() => {
   if (formData.phone) {
     checkPhoneNumberExistence(formData.phone);
   }
-}, [formData.phone]); 
+}, [formData.phone]);
 
 const checkPhoneNumberExistence = (phone) => {
   // console.log("Checking phone number:", phone);
