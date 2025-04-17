@@ -107,6 +107,8 @@ const Profile = () => {
               value={username}
               onChange={handleChange}
             />
+          </div>
+          <div>
             <input
               type="password"
               name="password"

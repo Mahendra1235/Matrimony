@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// import { HiMiniCheckBadge } from 'react-icons/hi2';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
 import '../App.css'

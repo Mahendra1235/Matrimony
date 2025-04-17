@@ -42,6 +42,12 @@ const AdminPage = () => {
     Status: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   const handleSort = (key) => {
     let direction = 'ascending';
     if (sortList.key === key && sortList.direction === 'ascending') {
@@ -108,9 +114,20 @@ const AdminPage = () => {
     if (filters.Status) {
       result = result.filter(item => item.Status === filters.Status);
     }
+
+    if (searchQuery) {
+      result = result.filter(item => {
+        return (
+          item.UserId.toString().includes(searchQuery) ||
+          item.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.Email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.Phone_number.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
+    }
     
     setFilteredRegistrations(result);
-  }, [filters, registrations]);
+  }, [filters, registrations, searchQuery]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -128,6 +145,7 @@ const AdminPage = () => {
       State: '',
       Status: ''
     });
+    setSearchQuery('');
   };
 
   const exportToCSV = () => {
@@ -376,6 +394,7 @@ const AdminPage = () => {
           )}
         </div>
       </div>
+      
   
       {showFilters && (
         <div className="filter-container">
@@ -451,6 +470,7 @@ const AdminPage = () => {
               </select>
             </div>
           </div>
+          
           <div className="filter-actions">
             <button onClick={resetFilters}>Reset Filters</button>
             <span className="filter-summary">
@@ -459,7 +479,14 @@ const AdminPage = () => {
           </div>
         </div>
       )}
-  
+    <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search by userId, username, email, or phone"
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+      </div>
       {editing && (
         <form onSubmit={handleSubmit} className="edit-form">
           <h3>Edit:</h3>

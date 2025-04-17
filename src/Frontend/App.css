@@ -697,14 +697,13 @@ input[type="radio"]:focus {
   }
   
   /* Profile Component */
-/* Profile Container Styling */
 .profile-container {
   margin: 20px;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: #d9e2ec;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 1200px;
+  max-width: 1950px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -722,13 +721,14 @@ input[type="radio"]:focus {
 .profile-image {
   position: relative;
   text-align: center;
+
 }
 
 .profile-image img {
   width: 400px;
   height: 400px;
   border-radius: 10%;
-  object-fit: cover;
+  object-fit:cover;
   border: 4px solid #ddd; /* Soft border around the profile picture */
 }
 
@@ -753,7 +753,7 @@ input[type="radio"]:focus {
 
 /* Profile Info Styling */
 .profile-info {
-  max-width: 700px;
+  max-width: 1700px;
   padding: 20px;
   background-color: #ffffff;
   border-radius: 8px;
@@ -1270,7 +1270,7 @@ button:hover {
 }
 
 .filter-toggle-button {
-  padding: 8px 15px;
+  padding: 15px 15px;
   background-color: #2196F3;
   color: white;
   border: none;
@@ -1368,7 +1368,7 @@ button:hover {
 
 /* Dark Mode Styling */
 body.dark-mode {
-  background-color: #cd5b5b;
+  background-color: #646363;
   color: rgb(9, 9, 9);
 }
 
@@ -1714,8 +1714,9 @@ button:hover {
 }
 .logout-btn {
   background:fixed;
+  background-color: white;
   border:#0056b3;
-  color: blue;
+  color: black;
   font: inherit;
   display: flex;
   align-items: right;
@@ -1723,5 +1724,6 @@ button:hover {
 }
 
 .logout-btn:hover {
-  color: red;
+  background-color: red;
+  color:white;
 }

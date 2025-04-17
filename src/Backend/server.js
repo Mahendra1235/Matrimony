@@ -368,6 +368,7 @@ app.post('/reset-password', (req, res) => {
   });
 });
 
+
 function sendConfirmationEmailToUser(email, token) {
   const confirmationUrl = `http://localhost:8081/confirm-email?token=${token}`;
 
