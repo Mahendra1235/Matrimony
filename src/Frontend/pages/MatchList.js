@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../App.css';
+import { useSelector } from 'react-redux';
 
 const MatchList = () => {
   const [matches, setMatches] = useState([]);
@@ -12,24 +13,35 @@ const MatchList = () => {
     caste: '',
     interests: '',
   });
+  const username = useSelector((state)=> state.auth.username);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get('http://localhost:8081/api/matches')
-      .then((response) => {
-        setMatches(response.data);
-        setFilteredMatches(response.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError('Failed to fetch data');
-        setLoading(false);
-      });
-  }, []);
+    const fetchMatches = () => {
+      setLoading(true);
+      axios
+        .get(`http://localhost:8081/api/matches?viewer=${username}`)
+        .then((response) => {
+          setMatches(response.data);
+          setFilteredMatches(response.data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setError('Failed to fetch data');
+          setLoading(false);
+        });
+    };
   
-
+    fetchMatches();
+  
+    const interval = setInterval(() => {
+      fetchMatches();
+    }, 10000);
+  
+    return () => clearInterval(interval);
+  }, [username]);
+  
   const handleViewClick = (match) => {
     navigate(`/viewmatchlist/${match.name}`, { state: { match } });
   };
@@ -58,13 +70,21 @@ const MatchList = () => {
     setFilteredMatches(filtered);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const handleRequestView = (match) => {
+    axios.post('http://localhost:8081/api/request-view', {
+      username: match.name,
+      requested_by: username,
+    })
+    .then(() => {
+      alert(`Request to view ${match.name}'s profile has been sent.`);
+    })
+    .catch(() => {
+      alert('Failed to send request.');
+    });
+  };
 
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div>
@@ -72,6 +92,7 @@ const MatchList = () => {
         <h2>Welcome User,</h2>
         <p>Find your matches here</p>
       </div>
+
       <div className="filter-section">
         <h3>Filter Matches</h3>
         <div>
@@ -81,7 +102,7 @@ const MatchList = () => {
             value={filter.caste}
             onChange={handleFilterChange}
           >
-            <option value="">All </option>
+            <option value="">All</option>
             <option value="OC">OC</option>
             <option value="SC">SC</option>
             <option value="BC">BC</option>
@@ -90,7 +111,6 @@ const MatchList = () => {
         <div>
           <label>Interests:</label>
           <select
-            type="text"
             name="interests"
             value={filter.interests}
             onChange={handleFilterChange}
@@ -112,15 +132,34 @@ const MatchList = () => {
       <div className="d-flex flex-wrap">
         {filteredMatches.map((match, index) => (
           <div className="match-card" key={index}>
-            <img src={match.profilepicture} alt="Profile" />
+          <div className="card-content">
+            {match.profile_visibility === 'public' ? (
+              <img src={match.profilepicture} alt="Profile" />
+            ) : (
+              <div className="private-profile">
+                <p> <strong>This account is private account.</strong></p>
+              </div>
+            )}
+        
             <h3>{match.name}</h3>
             <p>Age: {match.age}</p>
             <p>Caste: {match.caste}</p>
             <p>Interests: {match.interests}</p>
-            <button className="btn" onClick={() => handleViewClick(match)}>
-              View
-            </button>
+        
+            <div className="card-buttons">
+              {match.profile_visibility === 'public' ? (
+                <button className="btn" onClick={() => handleViewClick(match)}>
+                  View
+                </button>
+              ) : (
+                <button className="btn request-btn" onClick={() => handleRequestView(match)}>
+                  Request to View
+                </button>
+              )}
+            </div>
           </div>
+        </div>
+        
         ))}
       </div>
     </div>

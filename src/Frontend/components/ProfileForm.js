@@ -35,6 +35,7 @@ const ProfileForm = () => {
     interests: '',
     aboutMe: '',
     password: '',
+    profileVisibility: '',
   });
 
   const [value, setValue] = useState([]);
@@ -106,11 +107,21 @@ const ProfileForm = () => {
     }
   };
 
-useEffect(() => {
-  if (formData.phone) {
-    checkPhoneNumberExistence(formData.phone);
-  }
-}, [formData.phone]);
+  useEffect(() => {
+    // Sync interests
+    const selectedInterests = value.map((v) => v.value).join(', ');
+    setFormData((prev) => ({
+      ...prev,
+      interests: selectedInterests
+    }));
+  }, [value]);
+  
+  useEffect(() => {
+    if (formData.phone) {
+      checkPhoneNumberExistence(formData.phone);
+    }
+  }, [formData.phone]);
+  
 
 const checkPhoneNumberExistence = (phone) => {
   // console.log("Checking phone number:", phone);
@@ -352,6 +363,21 @@ const checkPhoneNumberExistence = (phone) => {
             isEditing={isEditingProfilePic}
             onEditClick={() => setIsEditingProfilePic(true)} 
           />
+
+    <label>
+    <input
+      type="checkbox"
+      name="profileVisibility"
+      checked={formData.profileVisibility === 'private'}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          profileVisibility: e.target.checked ? 'private' : 'public',
+        })
+      }
+      />
+    Make Profile Private
+    </label>
         </div>
 
         <div className="form-group">

@@ -5,6 +5,7 @@ import { FaMoon, FaSun } from 'react-icons/fa';
 import '../App.css';
 import { logout } from '../Redux/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import NotificationDropdown from '../pages/NotificationDropdown';
 
 const Header = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -41,12 +42,14 @@ const Header = () => {
           {isAuthenticated && (
             <>
               <li><Link to="/matches"><FaMarsDouble /> My Matches</Link></li>
+                <NotificationDropdown/>
               <li>
                 <button onClick={handleLogout} className="logout-btn">
                   <FaSignOutAlt /> Logout
                 </button>
               </li>
             </>
+            
           )}
         </ul>
         

@@ -39,8 +39,6 @@ app.get('/checkPhoneNumber/:phone', (req, res) => {
       return res.status(500).json({ error: 'Failed to check phone number' });
     }
 
-    // console.log('DBQuery result:', result);  // Add this log to check the result from DB
-
     if (result[0].count > 0) {
       res.json({ exists: true });
     } else {
@@ -58,7 +56,7 @@ app.post('/register', (req, res) => {
     // Ensure the table column names match your data fields
     const sql = `INSERT INTO users (
         username, email, phone_number, age, gender, interests, state, religion, caste,
-        marital_status, height, weight, profile_picture, about_me, password
+        marital_status, height, weight, profile_picture, about_me, password, profile_visibility
     ) VALUES (?)`;
     
     const values = [
@@ -77,6 +75,7 @@ app.post('/register', (req, res) => {
         req.body.formData.profilePicture, 
         req.body.formData.aboutMe,
         req.body.formData.password,
+        req.body.formData.profileVisibility,
     ];
 
     db.query(sql, [values], (err, data) => {
@@ -89,31 +88,42 @@ app.post('/register', (req, res) => {
 });
 
 
-//fetch login page credentials//
+// fetch login page credentials
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    
-    const userSql = "SELECT * FROM users WHERE username = ?";
-    db.query(userSql, [username], (err, result) => {
-        if (err || result.length === 0 || result[0].password !== password) {
-            const adminSql = "SELECT * FROM admin WHERE username = ?";
-            db.query(adminSql, [username], (err, adminResult) => {
-                if (err || adminResult.length === 0 || adminResult[0].password !== password) {
-                    return res.status(400).json({ message: 'Incorrect credentials' });
-                }
+  const { username, password } = req.body;
+  
+  const userSql = "SELECT * FROM users WHERE username = ?";
+  db.query(userSql, [username], (err, result) => {
+      if (err || result.length === 0 || result[0].password !== password) {
+          const adminSql = "SELECT * FROM admin WHERE username = ?";
+          db.query(adminSql, [username], (err, adminResult) => {
+              if (err || adminResult.length === 0 || adminResult[0].password !== password) {
+                  return res.status(400).json({ message: 'Incorrect credentials' });
+              }
 
-                res.status(200).json({ message: 'Admin login successful', userId: adminResult[0].id, role: 'admin' });
-            });
-        } else {
-            res.status(200).json({ message: 'Login successful', userId: result[0].id, role: 'user' });
-        }
-    });
+              res.status(200).json({
+                  message: 'Admin login successful',
+                  userId: adminResult[0].id,
+                  role: 'admin',
+                  username: adminResult[0].username
+              });
+          });
+      } else {
+          res.status(200).json({
+              message: 'Login successful',
+              userId: result[0].id,
+              role: 'user',
+              username: result[0].username
+          });
+      }
+  });
 });
+
 
 
 //Fetch user registeration for admin
 app.get('/admin/registrations', (req, res) => {
-    const sql = "SELECT * FROM users";  // Changed from 'register' to 'users'
+    const sql = "SELECT * FROM users";
     db.query(sql, (err, result) => {
         if (err) {
             console.error('Error fetching registrations:', err);
@@ -164,19 +174,271 @@ app.put('/admin/registrations/:id', (req, res) => {
 
 // To fetch match data
 app.get('/api/matches', (req, res) => {
+  const { viewer } = req.query;
+
   const query = `
-    SELECT username AS name, age, caste, interests, height, weight, state, Profile_Picture AS profilepicture, phone_number
-    FROM users 
-    WHERE status = 'active'`;
-  
-  db.query(query, (err, results) => {
+    SELECT 
+      u.username AS name, 
+      u.age, 
+      u.caste, 
+      u.interests, 
+      u.height, 
+      u.weight, 
+      u.state, 
+      u.Profile_Picture AS profilepicture, 
+      u.phone_number,
+      CASE 
+        WHEN u.profile_visibility = 'public' 
+          OR EXISTS (
+            SELECT 1 FROM approved_viewers 
+            WHERE viewer = ? AND private_user = u.username
+          ) 
+        THEN 'public'
+        ELSE 'private'
+      END AS profile_visibility
+    FROM users u
+    WHERE u.status = 'active'
+  `;
+
+  db.query(query, [viewer], (err, results) => {
     if (err) {
-      res.status(500).send({ message: 'Error fetching matches' });
+      return res.status(500).json({ message: 'Error fetching matches' });
     } else {
       res.json(results);
     }
   });
 });
+
+
+
+// Endpoint to handle request to view a private profile
+
+app.post('/api/request-view', (req, res) => {
+  const { username, requested_by } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ message: 'Username is required' });
+  }
+
+  const insertQuery = `
+    INSERT INTO view_requests (requested_user, requested_by, status)
+    VALUES (?, ?, 'pending')
+  `;
+
+  db.query(insertQuery, [username, requested_by], (err, result) => {
+    if (err) {
+      console.error('DB insert error:', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+
+    const emailQuery = `SELECT email FROM users WHERE username = ?`;
+
+    db.query(emailQuery, [username], (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(500).json({ message: 'Could not fetch email' });
+      }
+
+      const userEmail = results[0].email;
+
+      //  Insert notification into your `notifications` table
+      const notifMessage = `Someone has requested to view your profile.`;
+      const insertNotifQuery = `
+        INSERT INTO notifications (recipient, message, created_at)
+        VALUES (?, ?, NOW())
+      `;
+
+      db.query(insertNotifQuery, [username, notifMessage], (notifErr) => {
+        if (notifErr) {
+          console.error('Failed to insert notification:', notifErr);
+        }
+      });
+
+      //  Email logic
+      const approvalLink = `http://localhost:8081/api/approve-view?username=${encodeURIComponent(username)}`;
+      const mailOptions = {
+        from: 'yourgmail@gmail.com',
+        to: userEmail,
+        subject: 'Profile Picture View Request',
+        html: `
+          <p>Hello ${username},</p>
+          <p>Someone has requested to view your Elite Matrimony profile.</p>
+          <p><a href="${approvalLink}">Click here to approve</a></p>
+        `
+      };
+
+      transporter.sendMail(mailOptions, (err) => {
+        if (err) {
+          console.error('Email sending failed:', err);
+          return res.status(500).json({ message: 'Failed to send email' });
+        }
+
+        return res.status(200).json({ message: 'Request and notification sent successfully' });
+      });
+    });
+  });
+});
+
+app.get('/api/notifications/:username', (req, res) => {
+  const { username } = req.params;
+
+  const query = `
+    SELECT * FROM notifications 
+    WHERE recipient = ?
+    ORDER BY created_at DESC
+  `;
+
+  db.query(query, [username], (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+
+    res.json(results);
+  });
+});
+
+app.post('/api/notifications/delete', (req, res) => {
+  const { id } = req.body;
+
+  const query = `DELETE FROM notifications WHERE id = ?`;
+
+  db.query(query, [id], (err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Failed to delete notification' });
+    }
+
+    res.status(200).json({ message: 'Notification deleted successfully' });
+  });
+});
+
+
+
+app.get('/api/approve-view', (req, res) => {
+  const { username } = req.query;
+
+  if (!username) {
+    return res.status(400).send('Invalid request');
+  }
+
+  const updateQuery = `
+    UPDATE view_requests SET status = 'approved' WHERE requested_user = ?
+  `;
+
+  db.query(updateQuery, [username], (err, result) => {
+    if (err) {
+      return res.status(500).send('Failed to approve request');
+    }
+
+    // const updateProfile = `
+    //   UPDATE users SET profile_visibility = 'public' WHERE username = ?
+    // `;
+    const insertViewerQuery = `
+  INSERT INTO approved_viewers (private_user, viewer)
+  VALUES (?, ?)
+`;
+
+    db.query(insertViewerQuery, [username, requester], (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to insert approval' });
+      res.send(`<h2>Request Approved</h2><p>Your profile picture is now visible.</p>`);
+    });
+  });
+});
+
+
+app.post('/api/notifications/accept', (req, res) => {
+  const { id, username } = req.body;
+
+  // 1. Get the requester from view_requests
+  const getRequesterQuery = `
+    SELECT requested_by FROM view_requests
+    WHERE requested_user = ?
+    ORDER BY requested_at DESC LIMIT 1
+  `;
+
+  db.query(getRequesterQuery, [username], (err, requesterResult) => {
+    if (err || requesterResult.length === 0) {
+      return res.status(500).json({ message: 'Failed to find requester' });
+    }
+
+    const requester = requesterResult[0].requested_by;
+
+    // 2. Approve the view request
+    const approveRequestQuery = `
+      UPDATE view_requests
+      SET status = 'approved'
+      WHERE requested_user = ?
+    `;
+    console.log(`Approving for: ${username}, requester: ${requester}`);
+
+    db.query(approveRequestQuery, [username], (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to update request' });
+
+      // 3. Update user's profile visibility
+      const insertApprovalQuery = `
+  INSERT INTO approved_viewers (private_user, viewer, approved_at)
+  VALUES (?, ?, NOW())
+`;
+
+db.query(insertApprovalQuery, [username, requester], (err) => {
+  if (err) return res.status(500).json({ message: 'Failed to grant view access' });
+
+  // Continue: Notify requester, delete original notification, etc.
+
+
+        // 4. Notify the requester
+        const notifMessage = `Your request to view ${username}'s profile has been approved.`;
+        console.log("notification received:", notifMessage);
+        const notifyRequesterQuery = `
+          INSERT INTO notifications (recipient, message, created_at)
+          VALUES (?, ?, NOW())
+        `;
+
+        db.query(notifyRequesterQuery, [requester, notifMessage], (notifErr) => {
+          if (notifErr) console.error('Failed to notify requester:', notifErr);
+
+          // 5. Delete the original notification
+          const deleteNotifQuery = `
+            DELETE FROM notifications
+            WHERE id = ?
+          `;
+
+          db.query(deleteNotifQuery, [id], (err) => {
+            if (err) return res.status(500).json({ message: 'Failed to delete notification' });
+
+            res.status(200).json({ message: 'Profile access approved and requester notified' });
+          });
+        });
+      });
+    });
+  });
+});
+
+
+app.post('/api/notifications/decline', (req, res) => {
+  const { id, username } = req.body;
+
+  const declineRequestQuery = `
+    UPDATE view_requests
+    SET status = 'declined'
+    WHERE requested_user = ?
+  `;
+
+  const deleteNotifQuery = `
+    DELETE FROM notifications
+    WHERE id = ?
+  `;
+
+  db.query(declineRequestQuery, [username], (err) => {
+    if (err) return res.status(500).json({ message: 'Failed to update request' });
+
+    db.query(deleteNotifQuery, [id], (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to delete notification' });
+
+      res.status(200).json({ message: 'Profile access declined' });
+    });
+  });
+});
+
+
 
 
 // Endpoint to get user profile based on userId
